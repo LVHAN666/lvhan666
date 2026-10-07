@@ -1,0 +1,18 @@
+{
+  "name": "our-logbook",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "轻量级多人协作日志本：Vite + 原生 JS + Supabase 匿名登录 + Realtime",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.8"
+  }
+}
