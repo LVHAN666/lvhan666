@@ -1,5 +1,6 @@
 /* ============================================================
    我们的日志本 —— 样式（移动端优先、系统字体、支持深色模式）
+   设计原则：极简、干净、不堆砌效果
    ============================================================ */
 
 :root {
@@ -14,7 +15,9 @@
   --danger: #dc2626;
   --tag-bg: #eef2ff;
   --tag-text: #4338ca;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.09);
+  --focus-ring: rgba(37, 99, 235, 0.15);
 }
 
 [data-theme='dark'] {
@@ -29,7 +32,9 @@
   --danger: #f87171;
   --tag-bg: #252b3a;
   --tag-text: #a5b4fc;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.55);
+  --focus-ring: rgba(59, 130, 246, 0.28);
 }
 
 * {
@@ -65,6 +70,8 @@ body {
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
 .topbar h1 {
   font-size: 20px;
@@ -93,8 +100,9 @@ body {
   padding: 8px 14px;
   font-size: 14px;
   font-family: inherit;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 .btn:hover {
   background: var(--border);
@@ -143,6 +151,9 @@ body {
   background: var(--bg);
   color: var(--text);
   resize: vertical;
+}
+.composer textarea::placeholder {
+  color: var(--muted);
 }
 .composer-row {
   display: flex;
@@ -207,6 +218,10 @@ body {
   border-radius: 12px;
   padding: 14px;
   box-shadow: var(--shadow);
+  transition: box-shadow 0.15s;
+}
+.log-card:hover {
+  box-shadow: var(--shadow-hover);
 }
 .log-head {
   display: flex;
@@ -321,4 +336,185 @@ body {
   .topbar h1 {
     font-size: 24px;
   }
+}
+
+/* ---------- 图片上传与预览 ---------- */
+.image-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.image-preview-item {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.image-preview-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---------- 日志卡片里的图片 ---------- */
+.log-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.log-images a {
+  display: block;
+}
+.log-images img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+@media (min-width: 640px) {
+  .log-images img {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* ---------- 归档统计 ---------- */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.stats-label-inline {
+  font-size: 14px;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.stats-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.stats-panel.hidden {
+  display: none;
+}
+.stats-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+@media (min-width: 640px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+.stats-cell {
+  text-align: center;
+  padding: 10px 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.stats-value {
+  font-size: 20px;
+  font-weight: 700;
+}
+.stats-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.stats-section {
+  margin-top: 12px;
+}
+.stats-section h3 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+.stats-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.stats-user-row > span:first-child {
+  min-width: 70px;
+}
+.stats-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.stats-bar-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 4px;
+}
+.stats-user-count {
+  color: var(--muted);
+  min-width: 40px;
+  text-align: right;
+}
+.stats-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.stats-loading,
+.stats-empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 16px 0;
+  font-size: 14px;
+}
+
+/* ---------- 细节打磨（克制） ---------- */
+/* 输入框统一：轻微过渡 + 聚焦时主题色描边 */
+.composer textarea,
+.composer-row input,
+.filters input,
+.filters select,
+.modal-card input {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.composer textarea:focus,
+.composer-row input:focus,
+.filters input:focus,
+.filters select:focus,
+.modal-card input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+.btn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }

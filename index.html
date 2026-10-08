@@ -10,7 +10,7 @@
     <!-- 首次进入的昵称弹窗（有昵称时隐藏） -->
     <div id="nickname-modal" class="modal hidden">
       <div class="modal-card">
-        <h1>我们的日志本</h1>
+        <h1>📓 我们的日志本</h1>
         <p class="muted">输入一个昵称即可开始记录，无需邮箱、密码和验证码。</p>
         <input id="nickname-input" type="text" maxlength="30" placeholder="你的昵称" />
         <button id="nickname-save" class="btn primary">开始使用</button>
@@ -21,7 +21,7 @@
     <div class="app">
       <!-- 顶部栏 -->
       <header class="topbar">
-        <h1>我们的日志本</h1>
+        <h1>📓 我们的日志本</h1>
         <div class="topbar-right">
           <span class="nickname-chip" id="current-nickname"></span>
           <button id="change-nickname" class="btn ghost">修改昵称</button>
@@ -33,14 +33,21 @@
       <section class="composer">
         <textarea
           id="content-input"
-          rows="4"
-          placeholder="记录点什么……（Ctrl/Cmd + Enter 快捷发布）"
+          rows="3"
+          placeholder="完成了什么……&#10;下一步计划……&#10;问题与总结……"
         ></textarea>
         <div class="composer-row">
           <input id="tags-input" type="text" placeholder="标签，用逗号分隔，如：工作, 生活" />
           <button id="publish-btn" class="btn primary">发布</button>
         </div>
-        <p id="publish-status" class="muted"></p>
+        <div class="composer-row">
+          <button id="add-image-btn" class="btn ghost small" type="button">
+            📷 添加图片（最多 4 张，单张 ≤ 2MB）
+          </button>
+          <input id="image-input" type="file" accept="image/*" multiple hidden />
+        </div>
+        <div id="image-previews" class="image-previews"></div>
+        <p id="publish-status" class="muted">Ctrl/Cmd + Enter 快捷发布</p>
       </section>
 
       <!-- 搜索与标签筛选 -->
@@ -50,6 +57,14 @@
           <option value="">全部标签</option>
         </select>
       </section>
+
+      <!-- 归档统计 -->
+      <section class="stats-bar">
+        <span class="stats-label-inline">📊 归档统计</span>
+        <button id="stats-week" class="btn ghost small" type="button">本周</button>
+        <button id="stats-month" class="btn ghost small" type="button">本月</button>
+      </section>
+      <div id="stats-panel" class="stats-panel hidden"></div>
 
       <!-- 日志列表 -->
       <main id="log-list" class="log-list"></main>

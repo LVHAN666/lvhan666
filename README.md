@@ -1,11 +1,13 @@
 # 我们的日志本
 
-极简的多人共享日志本：**Vite + 原生 JavaScript + 原生 CSS + Supabase（匿名登录 + PostgreSQL + Realtime）**，3 人小团队、公网访问、全程免费。
+极简的多人共享日志本：**Vite + 原生 JavaScript + 原生 CSS + Supabase（匿名登录 + PostgreSQL + Realtime + Storage）**，3 人小团队、公网访问、全程免费。
 
 - 首次进入只输入昵称，无需邮箱 / 密码 / 验证码。
-- 发布日志（内容 + 标签 + 自动时间 + 昵称），按时间倒序展示。
+- 发布日志（内容 + 标签 + 自动时间 + 昵称 + **可选图片**），按时间倒序展示。
+- 每条日志显示**绝对日期时间**（如 `2025/06/15 14:30`），不再用“x 小时前”。
+- **归档统计**：一键统计本周 / 本月日志总数、参与昵称、总字数、日均条数、每人发布、热门标签。
 - 别人发布后，你这边**不用刷新**就能实时看到（Supabase Realtime）。
-- 只能删除自己发布的日志。
+- 只能删除自己发布的日志（删除时连同图片一起清理）。
 - 支持按内容关键词搜索、按标签筛选。
 - 移动端优先、系统字体、可选深色模式。
 
@@ -15,12 +17,13 @@
 
 ```
 our-logbook/
-├── index.html          # 页面结构
-├── main.js             # 前端逻辑（匿名登录、发布、列表、实时、删除、搜索）
-├── style.css           # 样式（移动端优先 + 深色模式）
-├── package.json        # 依赖与脚本
-├── supabase.sql        # 数据库初始化脚本（建表 / 索引 / RLS / Realtime）
-├── .env.example        # 环境变量模板
+├── index.html            # 页面结构
+├── main.js               # 前端逻辑（登录、发布、图片、列表、实时、删除、搜索、统计）
+├── style.css             # 样式（移动端优先 + 深色模式）
+├── package.json          # 依赖与脚本
+├── supabase.sql          # 新项目初始化脚本（建表 / 索引 / RLS / Realtime / 图片存储）
+├── supabase-update.sql   # 老项目升级脚本（加 images 列 + 图片存储桶与策略）
+├── .env.example          # 环境变量模板
 ├── .gitignore
 └── README.md
 ```
@@ -48,10 +51,9 @@ our-logbook/
 1. 左侧菜单 → **SQL Editor**。
 2. 点 **New query**。
 3. 把本仓库的 `supabase.sql` 全文粘贴进去。
-4. 点 **Run**。看到 “Success” 即完成建表、索引、RLS、Realtime 配置。
+4. 点 **Run**。看到 “Success” 即完成建表、索引、RLS、Realtime、图片存储配置。
 
-> 如果最后一行 `alter publication supabase_realtime add table public.logs;` 报错，就手动开启：
-> **Database → Replication → Publications → supabase_realtime → 勾选 `logs` 表**。
+> 如果 Realtime 那句报 42710（relation already member of publication），说明 logs 表**已经在**实时发布里，直接忽略即可，效果是一样的。
 
 ### 4. 获取 SUPABASE_URL 和 SUPABASE_ANON_KEY
 1. 左侧菜单 → **Project Settings**（齿轮图标）→ **API**。
@@ -59,6 +61,15 @@ our-logbook/
    - `Project URL`（形如 `https://xxxxxxxx.supabase.co`）→ 对应 `VITE_SUPABASE_URL`
    - `anon` / `public` 这一行的 key（很长一串）→ 对应 `VITE_SUPABASE_ANON_KEY`
 3. **注意**：用 `anon public` key，**不要**用 `service_role` key（那是有完整权限的密钥，绝不能放前端）。
+
+### 5. 老项目升级：图片功能（重要）
+如果你**之前已经执行过旧版 supabase.sql**，必须再执行一次升级脚本：
+1. **SQL Editor → New query**。
+2. 粘贴 `supabase-update.sql` 全文 → **Run**。
+3. 作用：给 `logs` 表加 `images` 列、创建公开图片桶 `log-images`、配置存储读写策略。
+4. 验证：左侧 **Storage** 页面能看到 `log-images` 桶；**Table Editor → logs** 能看到 `images` 列。
+
+> 全新项目只需执行 `supabase.sql`（已包含以上全部内容），这步可跳过。
 
 ---
 
@@ -113,6 +124,8 @@ git push -u origin main
 5. 点 **Save and Deploy**。等 1～2 分钟构建完成。
 6. 部署成功后，Cloudflare 会给你一个 `https://xxx.pages.dev` 地址，就是公网地址。
 
+> 改了代码之后，只要 `git push` 一次，Cloudflare Pages 就会**自动重新构建部署**，不用手动操作。
+
 ### 方式 B：Vercel
 1. 打开 https://vercel.com → **Add New → Project** → 导入 `our-logbook` 仓库。
 2. 框架会自动识别为 Vite；若没有，手动设置：
@@ -141,7 +154,7 @@ git push -u origin main
    - 点“修改昵称” → 改成“小美” → 顶部昵称同步变化；发布新日志显示“小美”。
 
 2. **发布日志**
-   - 设备 A 输入内容 + 标签 `工作, 生活` → 点“发布” → 输入框清空，日志出现在列表顶部，显示昵称、相对时间、内容、标签。
+   - 设备 A 输入内容 + 标签 `工作, 生活` → 点“发布” → 输入框清空，日志出现在列表顶部，显示昵称、绝对日期时间（如 `2025/06/15 14:30`）、内容、标签。
 
 3. **实时刷新（重点）**
    - 设备 A 保持页面不动；设备 B 发布一条日志。
@@ -159,13 +172,22 @@ git push -u origin main
 6. **多端适配**
    - 用手机和电脑分别打开，布局都能正常使用。
 
+7. **图片上传**
+   - 发布时点“📷 添加图片”选图（最多 4 张、单张 ≤ 2MB）→ 缩略图出现在输入框下方，可点 × 移除。
+   - 发布后日志卡片里出现图片缩略图，点击在新标签页看大图；其他设备实时看到该日志和图片。
+   - 删除带图片的日志 → 图片一并从存储桶删除。
+
+8. **归档统计**
+   - 点“📊 归档统计 → 本周 / 本月” → 面板显示该时段日志总数、参与昵称、总字数、日均条数、每人发布条数（带比例条）、热门标签。
+   - 再点一次同一按钮 → 面板收起。
+
 ---
 
 ## 六、免费服务限制与替代方案
 
 | 服务 | 免费额度 | 3 人场景 | 替代方案 |
 | --- | --- | --- | --- |
-| Supabase | 5 万月活用户、500MB 数据库、1GB 存储、Realtime 200 并发连接 | 绰绰有余 | Firebase（免费版） |
+| Supabase | 5 万月活用户、500MB 数据库、1GB 存储（图片占用这部分）、Realtime 200 并发连接 | 绰绰有余 | Firebase（免费版） |
 | Cloudflare Pages | 每月无限静态请求、100GB 带宽（宽松） | 绰绰有余 | Vercel / Netlify 免费版 |
 | 域名 | 平台自带子域名 | 可用 | 可另购便宜域名绑定（非必需） |
 
@@ -173,6 +195,7 @@ git push -u origin main
 1. **Supabase 免费项目空闲暂停**：免费项目若 **7 天无任何访问**，会被自动暂停。重新访问时在 Supabase 控制台点一下 “Restore project” 即可恢复，数据不丢失。
 2. **匿名会话的持久性**：匿名登录的会话存在浏览器 localStorage。只要**同一浏览器不清缓存**，就是同一个匿名用户，可以删除自己以前发的日志。若清缓存 / 换浏览器 / 无痕窗口，会变成**新的匿名用户**，旧日志会失去“删除按钮”（因为系统无法再证明那是你）。这是匿名登录的固有特性，对 3 人日常记录影响很小。
 3. **如果 Supabase 匿名登录不符合你的需求**，可以用 **Firebase Anonymous Auth + Firestore** 替代：同样无需邮箱，`signInAnonymously()` 返回一个稳定的匿名 UID，Firestore 的 `onSnapshot` 实现实时同步，前端只需把 `@supabase/supabase-js` 换成 `firebase` 并改写数据读写部分。但 Supabase 的“SQL + RLS + Realtime”组合更简单，建议优先 Supabase。
+4. **图片存储的边界**：图片存在公开桶 `log-images`，任何拿到链接的人都能看（与日志本身公开可读一致）。单张 2MB 是前端约定，如需更大可在 Supabase 控制台 **Storage → Settings** 调高上传上限（免费版上限 50MB）。1GB 免费存储对 3 人日常记录足够；满了可以在 Storage 页面手动清理旧图。
 
 ### 关于“别人不能删我的日志”的边界
 本方案的权限完全由数据库 RLS 保证（`auth.uid() = user_id`），前端只是“看不到按钮”的体验优化，即使有人绕过前端直接调 API，也无法删除或修改他人的日志。匿名用户之间的隔离是真实有效的。

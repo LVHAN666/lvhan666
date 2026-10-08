@@ -10,6 +10,7 @@ create table if not exists public.logs (
   nickname text not null,
   content text not null,
   tags text[] not null default '{}',
+  images text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -80,3 +81,24 @@ $$;
 -- 6.（可选）让 DELETE 事件也携带旧行数据，便于调试
 -- 默认只用主键 id 即可完成删除同步，一般无需开启：
 -- alter table public.logs replica identity full;
+
+-- 7. 图片存储（发布日志时上传图片，Supabase Storage 免费额度 1GB）
+-- 创建公开图片存储桶（幂等）
+insert into storage.buckets (id, name, public)
+values ('log-images', 'log-images', true)
+on conflict (id) do nothing;
+
+-- 所有人可读（公开桶）
+drop policy if exists "log_images_public_read" on storage.objects;
+create policy "log_images_public_read" on storage.objects
+  for select using (bucket_id = 'log-images');
+
+-- 登录（含匿名）用户可上传
+drop policy if exists "log_images_insert_own" on storage.objects;
+create policy "log_images_insert_own" on storage.objects
+  for insert with check (bucket_id = 'log-images' and auth.role() = 'authenticated');
+
+-- 只能删除自己上传的图片（删除日志时清理用）
+drop policy if exists "log_images_delete_own" on storage.objects;
+create policy "log_images_delete_own" on storage.objects
+  for delete using (bucket_id = 'log-images' and owner = auth.uid());
